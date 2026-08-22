@@ -1,0 +1,14 @@
+========================================
+      SurveyPy - Traverse Report        
+========================================
+Misclosure E (Wx) : 1004.4065 m
+Misclosure N (Wy) : -1066.0349 m
+Linear Error (W)  : 1464.6716 m
+Precision Ratio   : 1 : 1
+----------------------------------------
+Calculated Area   : 652.85 m² (0.0653 Ha)
+----------------------------------------
+Adjusted Coordinates:
+Point P0: E = 1000.000 m, N = 1000.000 m
+Point P1: E = 1098.211 m, N = 1105.345 m
+Point P2: E = 1084.802 m, N = 1077.668 m
