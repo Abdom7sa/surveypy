@@ -1,27 +1,37 @@
-# SurveyPy - Surveying & Geomatics Calculations Toolkit
+# SurveyPy 📐🧭
 
-**SurveyPy** is an open-source Python toolkit designed for Geomatics and Surveying Engineers to automate field boundary computations, closed traverse adjustments, planar geometric transformations, area estimations, and CAD interoperability.
-
----
-
-## 🌟 Key Features
-
-* **Distance & Azimuth Calculation**: Computes Euclidean distance and full 360° forward bearings with Degree-Minute-Second (DMS) conversion.
-* **Forward Coordinate Computation (Polar to Rectangular)**: Calculates target coordinates given a starting point, distance, and azimuth angle.
-* **Bowditch (Compass Rule) Traverse Adjustment**: Distributes linear misclosures ($\Delta E, \Delta N$) proportionally across traverse sides and evaluates total linear precision ratios ($1 : N$).
-* **Coordinate Area Computation (Shoelace Formula)**: Calculates closed polygon surface area in both square meters ($m^2$) and hectares ($Ha$).
-* **Automated Technical Report Generation**: Generates clean, ready-to-print text reports (`traverse_report.txt`) summarizing misclosures, precision, area, and final adjusted coordinates.
-* **AutoCAD Integration (`.dxf` Export)**: Exports adjusted traverse boundaries and vertices directly to standard ASCII DXF format (`traverse_output.dxf`) for AutoCAD and Civil 3D workflows.
-* **Interactive Graphical Visualization**: Render real-time scaled vector graphics of traverse geometry using built-in interactive plotting engines.
+**SurveyPy** is a Python-based geomatics tool designed for processing field survey data, adjusting closed traverses using the **Bowditch (Compass) Rule**, and generating multi-format geospatial outputs.
 
 ---
 
-## 📂 Project Structure
+## ✨ Features
+- **Field Data Input:** Read distances and azimuths manually or directly from a structured `data.csv` file.
+- **Data Validation:** Built-in checks to ensure distances are positive and azimuths fall within valid bounds ($0^\circ - 360^\circ$).
+- **Traverse Adjustment:** Computes misclosures ($W_x, W_y$), linear error ($W$), precision ratio, and adjusted coordinates using the **Bowditch method**.
+- **Area Calculation:** Automatic polygon area calculation in square meters ($\text{m}^2$) and hectares.
+- **Multi-Format Export:**
+  - **AutoCAD DXF (`.dxf`):** Boundary lines and point layers for CAD software.
+  - **GIS GeoJSON (`.geojson`):** Polygon boundaries and point layers for QGIS and spatial analysis.
+  - **Interactive HTML Dashboard (`.html`):** Clean web preview of the traverse layout with point coordinates.
+  - **Text Summary Report (`.txt`):** Plaintext report of adjustment results.
 
-```text
-surveypy/
-│
-├── survey.py              # Main Python interactive application script
-├── traverse_report.txt    # Generated technical adjustment report
-├── traverse_output.dxf    # Generated AutoCAD DXF file
-└── README.md              # Project documentation
+---
+
+## 🚀 Quick Start
+
+### 1. Requirements
+- Python 3.x (Uses standard libraries: `math`, `csv`, `json`, `turtle`).
+
+### 2. CSV Data Structure (`data.csv`)
+Place a `data.csv` file in the project directory formatted as follows:
+
+```csv
+Point,Distance,Azimuth
+A-B,120.45,45.5
+B-C,85.30,112.3
+C-D,140.10,210.8
+D-A,110.25,315.2
+## 📄 License & Copyright
+
+Copyright © 2026 Abdalrhman Musa. All rights reserved.
+Licensed under the [MIT License](LICENSE).

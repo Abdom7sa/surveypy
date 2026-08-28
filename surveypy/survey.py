@@ -1,18 +1,119 @@
 import math
+import csv
+import json
 import turtle
 
+# --- ألوان للـ Terminal (ANSI Escape Codes) ---
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
 
-# --- 1. الدوال الأساسية ---
+def print_banner():
+    banner = f"""{Colors.OKBLUE}{Colors.BOLD}
+  ___                           ___       
+ / __|_  _ _ ___ _____ _  _    | _ \_  _  
+ \__ \ || | '_ \ \ / -_) || |   |  _/ || | 
+ |___/\_,_|_| \_\_\___|\_, |   |_|  \_, | 
+                       |__/         |__/  
+        -- Geomatics & Traverse Processing Engine v1.2 --
+    {Colors.ENDC}"""
+    print(banner)
+
+# --- 1. فحص البيانات وقراءتها من CSV ---
+def validate_and_load_data(filename="data.csv"):
+    """قراءة وفحص بيانات الترافرس من ملف CSV لمنع الأخطاء الميدانية"""
+    distances, azimuths = [], []
+    with open(filename, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row_idx, row in enumerate(reader, start=2):
+            dist = float(row["Distance"])
+            az = float(row["Azimuth"])
+
+            if dist <= 0:
+                raise ValueError(f"خطأ في السطر {row_idx}: المسافة يجب أن تكون أكبر من الصفر.")
+            if not (0 <= az <= 360):
+                raise ValueError(f"خطأ في السطر {row_idx}: الانحراف يجب أن يكون بين 0 و 360 درجة.")
+
+            distances.append(dist)
+            azimuths.append(az)
+
+    return distances, azimuths
+
+# --- 2. إنشاء تقرير HTML تفاعلي ---
+def generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2, filename="traverse_dashboard.html"):
+    """توليد لوحة تقرير تفاعلية بصيغة HTML مخصصة للعرض والتقديم"""
+    svg_points = ""
+    e_vals = [pt[0] for pt in coords]
+    n_vals = [pt[1] for pt in coords]
+    min_e, max_e = min(e_vals), max(e_vals)
+    min_n, max_n = min(n_vals), max(n_vals)
+
+    span_e = max_e - min_e if max_e != min_e else 1.0
+    span_n = max_n - min_n if max_n != min_n else 1.0
+
+    svg_pts_list = []
+    for e, n in coords:
+        x = 50 + ((e - min_e) / span_e) * 400
+        y = 450 - ((n - min_n) / span_n) * 400
+        svg_pts_list.append(f"{x},{y}")
+        svg_points += (
+            f'<circle cx="{x}" cy="{y}" r="5" fill="#e74c3c" />'
+            f'<text x="{x+8}" y="{y-8}" font-size="12" fill="#2c3e50">({e:.1f}, {n:.1f})</text>'
+        )
+
+    polyline_points = " ".join(svg_pts_list)
+
+    html_content = f"""<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>SurveyPy - Interactive Dashboard</title>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background-color: #f8f9fa; color: #333; }}
+        .card {{ background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }}
+        h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
+        .metrics {{ display: flex; gap: 20px; flex-wrap: wrap; }}
+        .metric-box {{ background: #ecf0f1; padding: 15px; border-radius: 6px; flex: 1; min-width: 180px; }}
+        .metric-title {{ font-size: 0.9em; color: #7f8c8d; }}
+        .metric-val {{ font-size: 1.4em; font-weight: bold; color: #2c3e50; margin-top: 5px; }}
+        svg {{ background: #ffffff; border: 1px solid #ddd; border-radius: 6px; }}
+    </style>
+</head>
+<body>
+    <h1>📌 SurveyPy - التقرير التفاعلي للحسابات المساحية</h1>
+    <div class="metrics">
+        <div class="metric-box"><div class="metric-title">خطأ الإغلاق الكلي (Linear Error)</div><div class="metric-val">{err:.4f} m</div></div>
+        <div class="metric-box"><div class="metric-title">نسبة الدقة (Precision Ratio)</div><div class="metric-val">1 : {int(acc)}</div></div>
+        <div class="metric-box"><div class="metric-title">المساحة المحسوبة</div><div class="metric-val">{area_m2:.2f} m²</div></div>
+    </div>
+    <div class="card" style="margin-top: 20px;">
+        <h2>المعاينه التفاعلية للمضلع المساحي</h2>
+        <svg width="550" height="500">
+            <polyline points="{polyline_points}" fill="none" stroke="#3498db" stroke-width="2" />
+            {svg_points}
+        </svg>
+    </div>
+</body>
+</html>"""
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"{Colors.OKGREEN}[+] HTML Dashboard generated successfully as '{filename}'{Colors.ENDC}")
+
+# --- 3. الدوال المساحية الحسابية ---
 def calculate_distance(e1, n1, e2, n2):
     return math.sqrt((e2 - e1) ** 2 + (n2 - n1) ** 2)
-
 
 def calculate_azimuth(e1, n1, e2, n2):
     delta_e = e2 - e1
     delta_n = n2 - n1
     azimuth_deg = math.degrees(math.atan2(delta_e, delta_n))
     return azimuth_deg + 360 if azimuth_deg < 0 else azimuth_deg
-
 
 def deg_to_dms(deg):
     d = int(deg)
@@ -21,17 +122,14 @@ def deg_to_dms(deg):
     s = (minutes_float - m) * 60
     return d, m, s
 
-
 def calculate_forward_position(e1, n1, distance, azimuth_deg):
     azimuth_rad = math.radians(azimuth_deg)
     e2 = e1 + distance * math.sin(azimuth_rad)
     n2 = n1 + distance * math.cos(azimuth_rad)
     return e2, n2
 
-
-# --- 2. حساب المساحة الإحداثية (Shoelace Formula) ---
 def calculate_polygon_area(coords):
-    n = len(coords) - 1  # النقطة الأخيرة هي تكرار للأولى
+    n = len(coords) - 1
     area = 0.0
     for i in range(n):
         j = i + 1
@@ -41,49 +139,50 @@ def calculate_polygon_area(coords):
     area_hectares = area_sq_m / 10000.0
     return area_sq_m, area_hectares
 
-
-# --- 3. تصدير DXF لبرنامج الكاد (AutoCAD DXF Generator) ---
+# --- 4. التصدير لصيغ DXF و GeoJSON ---
 def export_to_dxf(coords, filename="traverse_output.dxf"):
     with open(filename, "w", encoding="utf-8") as f:
-        # DXF Header & Entities Section
         f.write("0\nSECTION\n2\nENTITIES\n")
-
-        # رسم الأضلاع (LINES)
         for i in range(len(coords) - 1):
             f.write("0\nLINE\n8\nTRAVERSE_BOUNDARY\n")
-            f.write(
-                f"10\n{coords[i][0]}\n20\n{coords[i][1]}\n30\n0.0\n"
-            )  # Start Point
-            f.write(
-                f"11\n{coords[i+1][0]}\n21\n{coords[i+1][1]}\n31\n0.0\n"
-            )  # End Point
-
-        # رسم النقاط (POINTS)
+            f.write(f"10\n{coords[i][0]}\n20\n{coords[i][1]}\n30\n0.0\n")
+            f.write(f"11\n{coords[i+1][0]}\n21\n{coords[i+1][1]}\n31\n0.0\n")
         for i, (e, n) in enumerate(coords[:-1]):
             f.write("0\nPOINT\n8\nTRAVERSE_POINTS\n")
             f.write(f"10\n{e}\n20\n{n}\n30\n0.0\n")
-
         f.write("0\nENDSEC\n0\nEOF\n")
-    print(f"[+] DXF File exported successfully as '{filename}'")
+    print(f"{Colors.OKGREEN}[+] DXF File exported successfully as '{filename}'{Colors.ENDC}")
 
+def export_to_geojson(coords, filename="traverse_output.geojson"):
+    features = []
+    for i, (e, n) in enumerate(coords[:-1]):
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [e, n]},
+            "properties": {"Point_ID": f"P{i}"},
+        })
 
-# --- 4. تعديل المضلع والتصدير والرسم ---
+    features.append({
+        "type": "Feature",
+        "geometry": {"type": "Polygon", "coordinates": [coords]},
+        "properties": {"Name": "Traverse Boundary"},
+    })
+
+    geojson_data = {"type": "FeatureCollection", "features": features}
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(geojson_data, f, indent=4)
+    print(f"{Colors.OKGREEN}[+] GeoJSON File exported successfully as '{filename}'{Colors.ENDC}")
+
+# --- 5. تعديل المضلع والتصدير والرسم ---
 def adjust_bowditch(distances, azimuths, start_e, start_n):
     total_length = sum(distances)
-
-    delta_e_list = [
-        d * math.sin(math.radians(az)) for d, az in zip(distances, azimuths)
-    ]
-    delta_n_list = [
-        d * math.cos(math.radians(az)) for d, az in zip(distances, azimuths)
-    ]
+    delta_e_list = [d * math.sin(math.radians(az)) for d, az in zip(distances, azimuths)]
+    delta_n_list = [d * math.cos(math.radians(az)) for d, az in zip(distances, azimuths)]
 
     w_e = sum(delta_e_list)
     w_n = sum(delta_n_list)
     linear_error = math.sqrt(w_e**2 + w_n**2)
-    accuracy_ratio = (
-        total_length / linear_error if linear_error != 0 else float("inf")
-    )
+    accuracy_ratio = total_length / linear_error if linear_error != 0 else float("inf")
 
     curr_e, curr_n = start_e, start_n
     adjusted_coords = [(curr_e, curr_n)]
@@ -96,7 +195,6 @@ def adjust_bowditch(distances, azimuths, start_e, start_n):
         adjusted_coords.append((curr_e, curr_n))
 
     return adjusted_coords, w_e, w_n, linear_error, accuracy_ratio
-
 
 def draw_traverse_turtle(coords):
     screen = turtle.Screen()
@@ -131,14 +229,10 @@ def draw_traverse_turtle(coords):
         y = (coords[i][1] - min_n - span_n / 2) * scale
         t.goto(x, y)
         t.dot(8, "red")
-        t.write(
-            f" P{i} ({coords[i][0]:.1f}, {coords[i][1]:.1f})",
-            font=("Arial", 10, "normal"),
-        )
+        t.write(f" P{i} ({coords[i][0]:.1f}, {coords[i][1]:.1f})", font=("Arial", 10, "normal"))
 
     t.hideturtle()
     screen.mainloop()
-
 
 def save_report(coords, w_e, w_n, err, acc, area_m2, area_ha):
     with open("traverse_report.txt", "w", encoding="utf-8") as f:
@@ -155,31 +249,28 @@ def save_report(coords, w_e, w_n, err, acc, area_m2, area_ha):
         f.write("Adjusted Coordinates:\n")
         for idx, (e, n) in enumerate(coords[:-1]):
             f.write(f"Point P{idx}: E = {e:.3f} m, N = {n:.3f} m\n")
-    print("\n[+] Report saved successfully as 'traverse_report.txt'")
+    print(f"\n{Colors.OKGREEN}[+] Report saved successfully as 'traverse_report.txt'{Colors.ENDC}")
 
-
-# --- 5. القائمة الرئيسية ---
+# --- 6. القائمة الرئيسية ---
 def main():
-    print("========================================")
-    print("         SurveyPy - Main Menu           ")
-    print("========================================")
-    print("1. Calculate Distance & Azimuth")
-    print("2. Forward Computation (Polar to Rect)")
-    print("3. Traverse Adjustment, Area, DXF & Plot")
-    print("========================================")
+    print_banner()
+    print(f"{Colors.BOLD}========================================{Colors.ENDC}")
+    print(f"{Colors.OKGREEN}1.{Colors.ENDC} Calculate Distance & Azimuth")
+    print(f"{Colors.OKGREEN}2.{Colors.ENDC} Forward Computation (Polar to Rect)")
+    print(f"{Colors.OKGREEN}3.{Colors.ENDC} Traverse Adjustment (Manual Input)")
+    print(f"{Colors.OKGREEN}4.{Colors.ENDC} Traverse Adjustment (Load & Validate CSV)")
+    print(f"{Colors.BOLD}========================================{Colors.ENDC}")
 
-    choice = input("Enter choice (1, 2, or 3): ")
+    choice = input(f"{Colors.WARNING}Enter choice (1, 2, 3, or 4): {Colors.ENDC}")
 
     if choice == "1":
         e1 = float(input("Enter E1: "))
         n1 = float(input("Enter N1: "))
         e2 = float(input("Enter E2: "))
         n2 = float(input("Enter N2: "))
-
         dist = calculate_distance(e1, n1, e2, n2)
         az = calculate_azimuth(e1, n1, e2, n2)
         d, m, s = deg_to_dms(az)
-
         print("\n--- Results ---")
         print(f"Distance: {dist:.3f} m")
         print(f"Azimuth : {az:.4f}° ({d}° {m}' {s:.2f}\")")
@@ -189,33 +280,35 @@ def main():
         n1 = float(input("Enter N1: "))
         dist = float(input("Enter Distance (m): "))
         az = float(input("Enter Azimuth (Degrees): "))
-
         e2, n2 = calculate_forward_position(e1, n1, dist, az)
-
         print("\n--- Calculated Point ---")
         print(f"E2: {e2:.3f} m")
         print(f"N2: {n2:.3f} m")
 
-    elif choice == "3":
-        print("\n--- Traverse Adjustment & Processing ---")
-        num_sides = int(input("Enter number of sides: "))
+    elif choice in ["3", "4"]:
         start_e = float(input("Enter Start E: "))
         start_n = float(input("Enter Start N: "))
 
-        distances, azimuths = [], []
-        for i in range(num_sides):
-            print(f"\nSide {i+1}:")
-            d = float(input("  Distance (m): "))
-            az = float(input("  Azimuth (Deg): "))
-            distances.append(d)
-            azimuths.append(az)
+        if choice == "3":
+            num_sides = int(input("Enter number of sides: "))
+            distances, azimuths = [], []
+            for i in range(num_sides):
+                print(f"\nSide {i+1}:")
+                distances.append(float(input("  Distance (m): ")))
+                azimuths.append(float(input("  Azimuth (Deg): ")))
+        else:
+            filename = input("Enter CSV filename (Default: data.csv): ") or "data.csv"
+            try:
+                distances, azimuths = validate_and_load_data(filename)
+                print(f"\n{Colors.OKGREEN}[+] Loaded & Validated {len(distances)} sides from '{filename}' successfully.{Colors.ENDC}")
+            except Exception as e:
+                print(f"\n{Colors.FAIL}[❌] Data Load Error: {e}{Colors.ENDC}")
+                return
 
-        coords, w_e, w_n, err, acc = adjust_bowditch(
-            distances, azimuths, start_e, start_n
-        )
+        coords, w_e, w_n, err, acc = adjust_bowditch(distances, azimuths, start_e, start_n)
         area_m2, area_ha = calculate_polygon_area(coords)
 
-        print("\n================ Results ================")
+        print(f"\n{Colors.BOLD}================ Results ================{Colors.ENDC}")
         print(f"Misclosure E (Wx) : {w_e:.4f} m")
         print(f"Misclosure N (Wy) : {w_n:.4f} m")
         print(f"Linear Error (W)  : {err:.4f} m")
@@ -228,8 +321,9 @@ def main():
 
         save_report(coords, w_e, w_n, err, acc, area_m2, area_ha)
         export_to_dxf(coords)
+        export_to_geojson(coords)
+        generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2)
         draw_traverse_turtle(coords)
-
 
 if __name__ == "__main__":
     main()
