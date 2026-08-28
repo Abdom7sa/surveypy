@@ -44,9 +44,9 @@ def validate_and_load_data(filename="data.csv"):
 
     return distances, azimuths
 
-# --- 2. إنشاء تقرير HTML تفاعلي ---
-def generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2, filename="traverse_dashboard.html"):
-    """توليد لوحة تقرير تفاعلية بصيغة HTML مخصصة للعرض والتقديم"""
+# --- 2. إنشاء تقرير HTML تفاعلي متكامل مع الجداول ---
+def generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2, area_ha, filename="traverse_dashboard.html"):
+    """توليد لوحة تقرير تفاعلية بصيغة HTML تحوي الخريطة وجداول الإحداثيات والنتائج"""
     svg_points = ""
     e_vals = [pt[0] for pt in coords]
     n_vals = [pt[1] for pt in coords]
@@ -57,16 +57,28 @@ def generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2, filename="trave
     span_n = max_n - min_n if max_n != min_n else 1.0
 
     svg_pts_list = []
-    for e, n in coords:
+    coord_rows = ""
+
+    for idx, (e, n) in enumerate(coords[:-1]):
+        # إعداد نقاط الرسم
         x = 50 + ((e - min_e) / span_e) * 400
-        y = 450 - ((n - min_n) / span_n) * 400
+        y = 350 - ((n - min_n) / span_n) * 300
         svg_pts_list.append(f"{x},{y}")
         svg_points += (
             f'<circle cx="{x}" cy="{y}" r="5" fill="#e74c3c" />'
-            f'<text x="{x+8}" y="{y-8}" font-size="12" fill="#2c3e50">({e:.1f}, {n:.1f})</text>'
+            f'<text x="{x+8}" y="{y-8}" font-size="12" fill="#2c3e50">P{idx}</text>'
         )
+        # إعداد صفوف الجدول
+        coord_rows += f"<tr><td><b>P{idx}</b></td><td>{e:.3f}</td><td>{n:.3f}</td></tr>\n"
 
-    polyline_points = " ".join(svg_pts_list)
+    # ربط أول نقطة بالنهاية لإغلاق الرسم البياني
+    if coords:
+        e0, n0 = coords[0]
+        x0 = 50 + ((e0 - min_e) / span_e) * 400
+        y0 = 350 - ((n0 - min_n) / span_n) * 300
+        svg_pts_list.append(f"{x0},{y0}")
+
+    polygon_points = " ".join(svg_pts_list)
 
     html_content = f"""<!DOCTYPE html>
 <html lang="ar">
@@ -74,29 +86,68 @@ def generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2, filename="trave
     <meta charset="UTF-8">
     <title>SurveyPy - Interactive Dashboard</title>
     <style>
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 30px; background-color: #f8f9fa; color: #333; }}
-        .card {{ background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }}
-        h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-        .metrics {{ display: flex; gap: 20px; flex-wrap: wrap; }}
-        .metric-box {{ background: #ecf0f1; padding: 15px; border-radius: 6px; flex: 1; min-width: 180px; }}
-        .metric-title {{ font-size: 0.9em; color: #7f8c8d; }}
-        .metric-val {{ font-size: 1.4em; font-weight: bold; color: #2c3e50; margin-top: 5px; }}
-        svg {{ background: #ffffff; border: 1px solid #ddd; border-radius: 6px; }}
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 25px; background-color: #f4f6f9; color: #333; }}
+        .container {{ max-width: 950px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
+        h1 {{ color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }}
+        .metrics {{ display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }}
+        .metric-box {{ background: #ebf5fb; padding: 15px; border-radius: 8px; flex: 1; min-width: 180px; border-left: 4px solid #3498db; }}
+        .metric-title {{ font-size: 0.85em; color: #7f8c8d; font-weight: bold; }}
+        .metric-val {{ font-size: 1.3em; font-weight: bold; color: #2c3e50; margin-top: 5px; }}
+        .svg-card {{ text-align: center; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 25px; }}
+        .grid {{ display: flex; flex-wrap: wrap; gap: 20px; }}
+        .card {{ flex: 1; min-width: 300px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; }}
+        h2 {{ color: #2980b9; font-size: 1.1rem; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 8px; }}
+        table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
+        th, td {{ border: 1px solid #ddd; padding: 10px; text-align: center; }}
+        th {{ background-color: #3498db; color: white; }}
+        tr:nth-child(even) {{ background-color: #f9f9f9; }}
     </style>
 </head>
 <body>
-    <h1>📌 SurveyPy - التقرير التفاعلي للحسابات المساحية</h1>
-    <div class="metrics">
-        <div class="metric-box"><div class="metric-title">خطأ الإغلاق الكلي (Linear Error)</div><div class="metric-val">{err:.4f} m</div></div>
-        <div class="metric-box"><div class="metric-title">نسبة الدقة (Precision Ratio)</div><div class="metric-val">1 : {int(acc)}</div></div>
-        <div class="metric-box"><div class="metric-title">المساحة المحسوبة</div><div class="metric-val">{area_m2:.2f} m²</div></div>
-    </div>
-    <div class="card" style="margin-top: 20px;">
-        <h2>المعاينه التفاعلية للمضلع المساحي</h2>
-        <svg width="550" height="500">
-            <polyline points="{polyline_points}" fill="none" stroke="#3498db" stroke-width="2" />
-            {svg_points}
-        </svg>
+    <div class="container">
+        <h1>📐 SurveyPy - التقرير التفاعلي للحسابات المساحية</h1>
+        
+        <div class="metrics">
+            <div class="metric-box"><div class="metric-title">خطأ الإغلاق الكلي (W)</div><div class="metric-val">{err:.4f} m</div></div>
+            <div class="metric-box"><div class="metric-title">نسبة الدقة (Precision)</div><div class="metric-val">1 : {int(acc)}</div></div>
+            <div class="metric-box"><div class="metric-title">المساحة (متر مربع)</div><div class="metric-val">{area_m2:.2f} m²</div></div>
+            <div class="metric-box"><div class="metric-title">المساحة (هكتار)</div><div class="metric-val">{area_ha:.4f} Ha</div></div>
+        </div>
+
+        <div class="svg-card">
+            <h2>المعاينة التفاعلية للمضلع المساحي (Polygon Graphics)</h2>
+            <svg width="500" height="400" style="background:#ffffff; border:1px solid #ddd; border-radius:6px;">
+                <polygon points="{polygon_points}" fill="rgba(52, 152, 219, 0.15)" stroke="#3498db" stroke-width="2" />
+                {svg_points}
+            </svg>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>جدول الإحداثيات المصححة</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الشرقيات (E)</th>
+                            <th>الشماليات (N)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {coord_rows}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>تفاصيل أخطاء القفل (Bowditch)</h2>
+                <table>
+                    <tr><th>Misclosure East (Wx)</th><td>{w_e:.4f} m</td></tr>
+                    <tr><th>Misclosure North (Wy)</th><td>{w_n:.4f} m</td></tr>
+                    <tr><th>Linear Misclosure (W)</th><td>{err:.4f} m</td></tr>
+                    <tr><th>Precision Ratio</th><td>1 : {int(acc)}</td></tr>
+                </table>
+            </div>
+        </div>
     </div>
 </body>
 </html>"""
@@ -143,15 +194,27 @@ def calculate_polygon_area(coords):
 def export_to_dxf(coords, filename="traverse_output.dxf"):
     with open(filename, "w", encoding="utf-8") as f:
         f.write("0\nSECTION\n2\nENTITIES\n")
+        
+        # 1. رسم خطوط المضلع (باللون الأزرق Index 5)
         for i in range(len(coords) - 1):
-            f.write("0\nLINE\n8\nTRAVERSE_BOUNDARY\n")
+            f.write("0\nLINE\n8\nTRAVERSE_BOUNDARY\n62\n5\n")
             f.write(f"10\n{coords[i][0]}\n20\n{coords[i][1]}\n30\n0.0\n")
             f.write(f"11\n{coords[i+1][0]}\n21\n{coords[i+1][1]}\n31\n0.0\n")
+            
+        # 2. رسم النقاط والكتابات (باللون الأصفر Index 2 للنصوص والأحمر Index 1 للنقاط)
         for i, (e, n) in enumerate(coords[:-1]):
-            f.write("0\nPOINT\n8\nTRAVERSE_POINTS\n")
+            # رسم النقطة
+            f.write("0\nPOINT\n8\nTRAVERSE_POINTS\n62\n1\n")
             f.write(f"10\n{e}\n20\n{n}\n30\n0.0\n")
+            
+            # كتابة اسم النقطة ملونة بالأصفر
+            f.write("0\nTEXT\n8\nTRAVERSE_LABELS\n62\n2\n")
+            f.write(f"10\n{e + 1.5}\n20\n{n + 1.5}\n30\n0.0\n")
+            f.write("40\n2.0\n") # حجم الخط
+            f.write(f"1\nP{i}\n")
+            
         f.write("0\nENDSEC\n0\nEOF\n")
-    print(f"{Colors.OKGREEN}[+] DXF File exported successfully as '{filename}'{Colors.ENDC}")
+    print(f"{Colors.OKGREEN}[+] DXF File exported with colors successfully as '{filename}'{Colors.ENDC}")
 
 def export_to_geojson(coords, filename="traverse_output.geojson"):
     features = []
@@ -322,7 +385,7 @@ def main():
         save_report(coords, w_e, w_n, err, acc, area_m2, area_ha)
         export_to_dxf(coords)
         export_to_geojson(coords)
-        generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2)
+        generate_html_dashboard(coords, w_e, w_n, err, acc, area_m2, area_ha)
         draw_traverse_turtle(coords)
 
 if __name__ == "__main__":
