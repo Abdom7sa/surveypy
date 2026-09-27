@@ -143,3 +143,108 @@ The traverse workflow can generate an HTML report containing:
    │       │        │
    ▼       ▼        ▼
 AutoCAD   QGIS   ArcGIS Pro
+🛠️ Technology Stack
+Programming
+�
+Spatial Processing
+� �
+Visualization
+� �
+GIS & CAD
+� � �
+📁 Project Structure
+SurveyPy/
+│
+├── survey.py
+├── Test_survey.py
+├── data.csv
+│
+├── adjustment/
+│   ├── __init__.py
+│   └── traverse.py
+│
+├── geodesy/
+│   ├── __init__.py
+│   └── transformations.py
+│
+├── surveying/
+│   ├── __init__.py
+│   ├── intersections.py
+│   └── leveling.py
+│
+├── visualization/
+│   ├── __init__.py
+│   └── exporters.py
+│
+├── reports/
+│   ├── __init__.py
+│   └── builder.py
+│
+├── .gitignore
+├── LICENSE
+└── README.md
+⚡ Quick Start
+1. Clone the Repository
+git clone https://github.com/Abdom7sa/SurveyPy.git
+cd SurveyPy
+2. Install Dependencies
+pip install geopandas shapely matplotlib
+3. Prepare Your Data
+Example data.csv:
+Distance,Azimuth
+120.50,45.25
+85.30,135.10
+110.15,225.80
+90.40,315.40
+4. Run SurveyPy
+python survey.py
+📤 Generated Outputs
+Depending on the workflow, SurveyPy can generate:
+traverse_dashboard.html
+traverse_output.dxf
+traverse_layer.geojson
+traverse_layer.gpkg
+traverse_layer_points.shp
+traverse_points.csv
+These files can be imported directly into common GIS and CAD environments.
+🧪 Testing
+Run the available test suite with:
+python Test_survey.py
+🎯 Project Goals
+SurveyPy is being developed to:
+Automate repetitive surveying calculations
+Reduce manual calculation errors
+Connect surveying with GIS workflows
+Generate CAD-ready outputs
+Generate GIS-ready datasets
+Produce reproducible calculation reports
+Explore Python-based automation in geomatics engineering
+🔮 Future Development
+Planned or possible future additions include:
+Least Squares Network Adjustment
+Resection / Free Station
+Additional coordinate transformations
+GNSS data processing
+COGO tools
+Additional CAD export capabilities
+Expanded GIS formats
+Automated quality-control reports
+Graphical User Interface
+🤝 Contributing
+Contributions and suggestions are welcome.
+If you are interested in surveying, geomatics, GIS, CAD automation, or Python-based spatial processing, feel free to:
+Open an Issue
+Suggest an improvement
+Fork the repository
+Submit a Pull Request
+👨‍💻 Author
+Abdalrhman Musa Mohmed
+Geomatics Engineering Student
+Surveying Engineering | GIS | Remote Sensing | Python
+GitHub:
+https://github.com/Abdom7sa⁠�
+SurveyPy:
+https://github.com/Abdom7sa/SurveyPy⁠�
+📜 License
+This project is licensed under the MIT License.
+See the LICENSE file for details.
