@@ -143,6 +143,9 @@ The traverse workflow can generate an HTML report containing:
    │       │        │
    ▼       ▼        ▼
 AutoCAD   QGIS   ArcGIS Pro
+
+
+
 🛠️ Technology Stack
 Programming
 �
@@ -152,6 +155,8 @@ Visualization
 � �
 GIS & CAD
 � � �
+
+
 📁 Project Structure
 SurveyPy/
 │
@@ -183,6 +188,8 @@ SurveyPy/
 ├── .gitignore
 ├── LICENSE
 └── README.md
+
+
 ⚡ Quick Start
 1. Clone the Repository
 git clone https://github.com/Abdom7sa/SurveyPy.git
@@ -198,6 +205,9 @@ Distance,Azimuth
 90.40,315.40
 4. Run SurveyPy
 python survey.py
+
+
+
 📤 Generated Outputs
 Depending on the workflow, SurveyPy can generate:
 traverse_dashboard.html
@@ -207,9 +217,13 @@ traverse_layer.gpkg
 traverse_layer_points.shp
 traverse_points.csv
 These files can be imported directly into common GIS and CAD environments.
+
+
 🧪 Testing
 Run the available test suite with:
 python Test_survey.py
+
+
 🎯 Project Goals
 SurveyPy is being developed to:
 Automate repetitive surveying calculations
@@ -219,6 +233,8 @@ Generate CAD-ready outputs
 Generate GIS-ready datasets
 Produce reproducible calculation reports
 Explore Python-based automation in geomatics engineering
+
+
 🔮 Future Development
 Planned or possible future additions include:
 Least Squares Network Adjustment
@@ -230,6 +246,8 @@ Additional CAD export capabilities
 Expanded GIS formats
 Automated quality-control reports
 Graphical User Interface
+
+
 🤝 Contributing
 Contributions and suggestions are welcome.
 If you are interested in surveying, geomatics, GIS, CAD automation, or Python-based spatial processing, feel free to:
@@ -237,6 +255,8 @@ Open an Issue
 Suggest an improvement
 Fork the repository
 Submit a Pull Request
+
+
 👨‍💻 Author
 Abdalrhman Musa Mohmed
 Geomatics Engineering Student
@@ -245,6 +265,8 @@ GitHub:
 https://github.com/Abdom7sa⁠�
 SurveyPy:
 https://github.com/Abdom7sa/SurveyPy⁠�
+
+
 📜 License
 This project is licensed under the MIT License.
 See the LICENSE file for details.
