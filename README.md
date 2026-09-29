@@ -112,39 +112,6 @@ The traverse workflow can generate an HTML report containing:
 
 ---
 
-## 🔄 Workflow
-
-```text
-┌──────────────────────┐
-│   FIELD OBSERVATIONS │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│      SurveyPy        │
-│    Python Engine     │
-└──────────┬───────────┘
-           │
-     ┌─────┼─────┐
-     ▼     ▼     ▼
- Traverse  Grid  Intersection
- Adjustment Leveling
-     │      │      │
-     └──────┼──────┘
-            ▼
-┌──────────────────────┐
-│ Coordinate Processing│
-└──────────┬───────────┘
-           │
-           ▼
-   ┌───────┼────────┐
-   ▼       ▼        ▼
-  DXF    GeoJSON   GeoPackage
-   │       │        │
-   ▼       ▼        ▼
-AutoCAD   QGIS   ArcGIS Pro
-
-
 ---
 
 ---
@@ -268,6 +235,41 @@ GitHub:
 https://github.com/Abdom7sa⁠�
 SurveyPy:
 https://github.com/Abdom7sa/SurveyPy⁠�
+---
+
+## 🔄 Workflow
+
+```text
+┌──────────────────────┐
+│   FIELD OBSERVATIONS │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│      SurveyPy        │
+│    Python Engine     │
+└──────────┬───────────┘
+           │
+     ┌─────┼─────┐
+     ▼     ▼     ▼
+ Traverse  Grid  Intersection
+ Adjustment Leveling
+     │      │      │
+     └──────┼──────┘
+            ▼
+┌──────────────────────┐
+│ Coordinate Processing│
+└──────────┬───────────┘
+           │
+           ▼
+   ┌───────┼────────┐
+   ▼       ▼        ▼
+  DXF    GeoJSON   GeoPackage
+   │       │        │
+   ▼       ▼        ▼
+AutoCAD   QGIS   ArcGIS Pro
+
+ 
 
 
 📜 License
