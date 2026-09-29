@@ -232,9 +232,10 @@ Abdalrhman Musa Mohmed
 Geomatics Engineering Student
 Surveying Engineering | GIS | Remote Sensing | Python
 GitHub:
-https://github.com/Abdom7sa⁠�
+https://github.com/Abdom7sa⁠
+
 SurveyPy:
-https://github.com/Abdom7sa/SurveyPy⁠�
+https://github.com/Abdom7sa/SurveyPy⁠
 ---
 
 ## 🔄 Workflow
